@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Eliz Diário">
+<meta name="theme-color" content="#FBF7F2">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Eliz Diário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap">
+<style>
+  :root {
+    --cream: #FBF7F2;
+    --sand: #F0E8DC;
+    --warm: #E8DDD0;
+    --border: #DDD5C8;
+    --muted: #A89E92;
+    --text: #2C2420;
+    --text2: #6B5F57;
+    --sleep-c: #3B6D11;
+    --sleep-bg: #EAF3DE;
+    --sleep-border: #C0DD97;
+    --feed-c: #4A42A8;
+    --feed-bg: #EEEDFE;
+    --feed-border: #AFA9EC;
+    --diaper-c: #854F0B;
+    --diaper-bg: #FAEEDA;
+    --diaper-border: #FAC775;
+    --danger: #A32D2D;
+    --danger-bg: #FCEBEB;
+    --green: #22c55e;
+    --awake-c: #C47A0B;
+    --awake-bg: #FEF3DC;
+    --awake-border: #F5CE7A;
+    --dash-c: #0284c7;
+    --dash-bg: #e0f2fe;
+    --dash-border: #bae6fd;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* SETUP */
+  #setup-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--cream);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 28px; text-align: center;
+  }
+  #setup-screen .setup-emoji { font-size: 64px; margin-bottom: 20px; }
+  #setup-screen h2 { font-family: 'DM Serif Display', serif; font-size: 30px; margin-bottom: 10px; }
+  #setup-screen p { color: var(--text2); font-size: 15px; margin-bottom: 36px; line-height: 1.6; }
+  .setup-name-btn {
+    width: 100%; padding: 22px 16px;
+    border-radius: 20px; border: 2px solid var(--border);
+    background: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 20px; font-weight: 600; color: var(--text);
+    cursor: pointer; margin-bottom: 14px;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .setup-name-btn:active { transform: scale(0.97); }
+  .setup-name-btn.mae { border-color: #F0AEB8; background: #FEF0F3; color: #8B2252; }
+  .setup-name-btn.pai { border-color: #AFA9EC; background: var(--feed-bg); color: var(--feed-c); }
+  .setup-name-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .setup-name-btn:disabled:active { transform: none; }
+
+  /* BLOCKED SCREEN */
+  #blocked-screen {
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--cream);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 28px; text-align: center;
+  }
+  #blocked-screen .setup-emoji { font-size: 64px; margin-bottom: 20px; }
+  #blocked-screen h2 { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 10px; }
+  #blocked-screen p { color: var(--text2); font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
+  .btn-retry { padding: 14px 32px; border-radius: 14px; border: 1px solid var(--border); background: var(--sand); font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); cursor: pointer; }
+
+  /* HEADER */
+  .header { padding: calc(var(--safe-top) + 14px) 20px 14px; background: var(--cream); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .header-left h1 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); line-height: 1; }
+  .header-left p { font-size: 12px; color: var(--muted); margin-top: 3px; text-transform: capitalize; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .age-badge { font-size: 11px; font-weight: 500; background: var(--feed-bg); color: var(--feed-c); border: 1px solid var(--feed-border); border-radius: 99px; padding: 2px 10px; }
+
+  /* SYNC BAR */
+  .sync-bar { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 16px; background: var(--sand); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); flex-shrink: 0; min-height: 28px; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.4s; flex-shrink: 0; }
+  .sync-dot.ok { background: var(--green); }
+  .sync-dot.err { background: #e74c3c; }
+  .sync-dot.loading { background: #f39c12; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* SCROLL */
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 8px; }
+
+  /* TABBAR */
+  .tabbar { display: flex; background: #fff; border-top: 1px solid var(--border); padding-bottom: var(--safe-bot); flex-shrink: 0; }
+  .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px; background: none; border: none; cursor: pointer; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 400; transition: color 0.15s; }
+  .tab-btn .ti { font-size: 22px; }
+  .tab-btn.active { color: var(--text); font-weight: 500; }
+  .tab-btn.active[data-tab="sleep"] { color: var(--sleep-c); }
+  .tab-btn.active[data-tab="feed"]  { color: var(--feed-c); }
+  .tab-btn.active[data-tab="diaper"]{ color: var(--diaper-c); }
+  .tab-btn.active[data-tab="log"]   { color: var(--text); }
+  .tab-btn.active[data-tab="dash"]  { color: var(--dash-c); }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARD */
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 12px; }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .card-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .card-title { font-size: 17px; font-weight: 500; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* TIMER */
+  .big-timer { font-family: 'DM Serif Display', serif; font-size: 64px; text-align: center; letter-spacing: -2px; color: var(--text); margin: 4px 0 8px; font-variant-numeric: tabular-nums; line-height: 1; }
+  .timer-status { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 20px; font-size: 14px; color: var(--text2); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .dot.on { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+  .dot.awake { background: var(--awake-c); box-shadow: 0 0 0 3px rgba(196,122,11,0.2); }
+
+  /* BUTTONS */
+  .btn-main { width: 100%; padding: 15px; border-radius: 14px; border: none; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s, opacity 0.1s; }
+  .btn-main:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-sleep { background: var(--sleep-c); color: #fff; }
+  .btn-sleep-stop { background: #2d8c5e; color: #fff; }
+  .btn-feed { background: var(--feed-c); color: #fff; }
+  .btn-feed-stop { background: var(--danger); color: #fff; }
+  .btn-diaper { background: var(--diaper-c); color: #fff; }
+  .btn-ghost { width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--border); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text2); cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.15s; }
+  .btn-ghost:active { background: var(--sand); }
+  .btn-danger { width: 100%; padding: 13px; border-radius: 14px; border: 1px solid var(--danger-bg); background: var(--danger-bg); color: var(--danger); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 8px; transition: opacity 0.1s; }
+  .btn-danger:active { opacity: 0.8; }
+
+  /* METRICS */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .metric { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+  .metric-lbl { font-size: 12px; color: var(--muted); }
+  .metric-val { font-size: 24px; font-weight: 500; margin-top: 4px; }
+
+  /* SIDE */
+  .side-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+  .side-btn { flex: 1; padding: 14px 8px; border: 1px solid var(--border); border-radius: 14px; background: #fff; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .side-btn:active { transform: scale(0.97); }
+  .side-btn i { font-size: 22px; display: block; margin-bottom: 4px; color: var(--muted); }
+  .side-btn span { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .side-btn.sel-l { border-color: var(--feed-border); background: var(--feed-bg); }
+  .side-btn.sel-l i, .side-btn.sel-l span { color: var(--feed-c); }
+  .side-btn.sel-r { border-color: #5DCAA5; background: #E1F5EE; }
+  .side-btn.sel-r i, .side-btn.sel-r span { color: #085041; }
+  .side-btn.disabled { opacity: 0.3; pointer-events: none; }
+
+  /* DIAPER */
+  .diaper-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .diaper-btn { padding: 14px 4px; border: 1px solid var(--border); border-radius: 14px; background: #fff; cursor: pointer; text-align: center; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .diaper-btn:active { transform: scale(0.97); }
+  .diaper-btn .d-emoji { font-size: 24px; display: block; margin-bottom: 4px; }
+  .diaper-btn .d-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .diaper-btn.sel-wet { border-color: #85B7EB; background: #E6F1FB; }
+  .diaper-btn.sel-wet .d-label { color: #0C447C; }
+  .diaper-btn.sel-dirty { border-color: var(--diaper-border); background: var(--diaper-bg); }
+  .diaper-btn.sel-dirty .d-label { color: var(--diaper-c); }
+  .diaper-btn.sel-mixed { border-color: #F09595; background: #FCEBEB; }
+  .diaper-btn.sel-mixed .d-label { color: #791F1F; }
+
+  /* HISTORY */
+  .history-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--sand); }
+  .history-row:last-child { border-bottom: none; }
+  .h-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .h-desc { flex: 1; font-size: 14px; font-weight: 500; }
+  .h-time { font-size: 13px; color: var(--muted); }
+
+  /* AWAKE ROW */
+  .awake-row { display: flex; align-items: center; gap: 10px; padding: 8px 0 8px 44px; border-bottom: 1px solid var(--sand); }
+  .awake-row:last-child { border-bottom: none; }
+  .awake-tag { font-size: 12px; color: var(--awake-c); font-weight: 500; background: var(--awake-bg); border: 1px solid var(--awake-border); border-radius: 99px; padding: 2px 10px; }
+
+  /* BADGE */
+  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
+  .badge-l { background: var(--feed-bg); color: var(--feed-c); }
+  .badge-r { background: #E1F5EE; color: #085041; }
+  .badge-wet { background: #E6F1FB; color: #0C447C; }
+  .badge-dirty { background: var(--diaper-bg); color: var(--diaper-c); }
+  .badge-mixed { background: #FCEBEB; color: #791F1F; }
+  .badge-sleep { background: var(--sleep-bg); color: var(--sleep-c); }
+  .badge-awake { background: var(--awake-bg); color: var(--awake-c); }
+  .badge-mae { background: #FEF0F3; color: #8B2252; }
+  .badge-pai { background: var(--feed-bg); color: var(--feed-c); }
+
+  /* SUMMARY */
+  .sum-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .sum-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 10px; text-align: center; }
+  .sum-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+  .sum-val { font-size: 28px; font-weight: 500; line-height: 1; }
+  .sum-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .section-lbl { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+  .empty { text-align: center; padding: 32px 0; color: var(--muted); font-size: 14px; }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+
+  /* INSTALL BANNER */
+  .install-banner { background: var(--sand); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; font-size: 13px; color: var(--text2); display: flex; gap: 10px; align-items: flex-start; }
+  .install-banner .bi { font-size: 20px; flex-shrink: 0; }
+  .install-banner b { color: var(--text); }
+  .install-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); margin-left: auto; padding: 0 0 0 8px; flex-shrink: 0; }
+
+  /* AWAKE TIMER INLINE */
+  .awake-inline { font-size: 13px; color: var(--awake-c); background: var(--awake-bg); border: 1px solid var(--awake-border); border-radius: 10px; padding: 8px 14px; margin-top: 10px; text-align: center; font-weight: 500; }
+
+  /* DASHBOARD EXTRAS */
+  .dash-period-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px; }
+  .dash-period-btn { padding: 8px 4px; border: 1px solid var(--border); background: #fff; font-size: 12px; font-weight: 500; border-radius: 10px; cursor: pointer; color: var(--text2); text-align: center; }
+  .dash-period-btn.active { background: var(--dash-c); color: #fff; border-color: var(--dash-c); }
+  .dash-metric-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+  .dash-metric-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .dash-metric-value { font-size: 24px; font-weight: 600; color: var(--text); }
+  .dash-progress-container { margin-top: 12px; }
+  .dash-progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+  .dash-progress-bar-bg { width: 100%; height: 10px; background: var(--sand); border-radius: 99px; overflow: hidden; display: flex; }
+  .dash-progress-bar-fill { height: 100%; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<div id="blocked-screen">
+  <div class="setup-emoji">🔒</div>
+  <h2>Sessão ativa em outro aparelho</h2>
+  <p>Você está conectada como <strong id="blocked-user-name"></strong> em outro celular.<br>Saia de lá antes de entrar aqui, ou aguarde alguns segundos.</p>
+  <button class="btn-retry" onclick="retryLogin()">Tentar novamente</button>
+  <br><br>
+  <button onclick="forceLogin()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline">Forçar login neste aparelho</button>
+</div>
+
+<div id="setup-screen" style="display:none">
+  <div class="setup-emoji">🌸</div>
+  <h2>Olá! Quem é você?</h2>
+  <p>Seus registros ficam identificados<br>para que os dois vejam quem anotou.<br><span style="font-size:13px;color:var(--muted)">O login fica vinculado a este celular.</span></p>
+  <button class="setup-name-btn mae" id="btn-mae" onclick="chooseName('Mamãe')">👩 Mamãe</button>
+  <button class="setup-name-btn pai" id="btn-pai" onclick="chooseName('Papai')">👨 Papai</button>
+  <p id="setup-loading" style="display:none;color:var(--muted);font-size:13px">Verificando disponibilidade…</p>
+</div>
+
+<div id="app" style="display:none; flex-direction:column; height:100dvh">
+
+<div class="header">
+  <div class="header-left">
+    <h1>✨ Eliz</h1>
+    <p id="header-date">carregando...</p>
+  </div>
+  <div class="header-right">
+    <span style="font-size:18px;opacity:0.6">🌙</span>
+    <span class="age-badge" id="age-badge">— dias</span>
+  </div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-dot loading" id="sync-dot"></div>
+  <span id="sync-status">Conectando…</span>
+</div>
+
+<div class="scroll" id="scroll">
+
+  <div class="install-banner" id="install-banner" style="display:none">
+    <i class="bi bi-box-arrow-up"></i>
+    <div><b>Adicione à tela inicial!</b><br>Toque em <b>Compartilhar ↑</b> e depois <b>"Adicionar à Tela de Início"</b>.</div>
+    <button class="install-close" onclick="dismissBanner()">×</button>
+  </div>
+
+  <div class="panel active" id="panel-sleep">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:var(--sleep-bg)">🌙</div>
+        <div><div class="card-title">Monitorar sono</div><div class="card-sub">Toque para iniciar e parar</div></div>
+      </div>
+      <div class="big-timer" id="sleep-timer">00:00:00</div>
+      <div class="timer-status">
+        <div class="dot" id="sleep-dot"></div>
+        <span id="sleep-status">Eliz acordada</span>
+      </div>
+      <div id="awake-inline-box" class="awake-inline" style="display:none">☀️ Acordada há <span id="awake-inline-timer">00:00</span></div>
+      <button class="btn-main btn-sleep" id="sleep-btn" onclick="toggleSleep()" style="margin-top:14px">
+        <i class="bi bi-play-circle-fill"></i> Iniciar sono
+      </button>
+      <button class="btn-ghost" id="sleep-cancel" onclick="cancelSleep()" style="display:none">
+        <i class="bi bi-x-circle"></i> Cancelar
+      </button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Sono hoje</div><div class="metric-val" id="sleep-today">0h 0m</div></div>
+      <div class="metric"><div class="metric-lbl">Último sono</div><div class="metric-val" id="sleep-last">—</div></div>
+    </div>
+    <div class="card" id="sleep-history-card" style="display:none">
+      <div class="section-lbl">Hoje</div>
+      <div id="sleep-history"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-feed">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:var(--feed-bg)">🤱</div>
+        <div><div class="card-title">Registrar mamada</div><div class="card-sub">Escolha o lado e inicie</div></div>
+      </div>
+      <div class="section-lbl" style="margin-bottom:8px">Lado</div>
+      <div class="side-btns">
+        <div class="side-btn sel-l" id="side-L" onclick="selectSide('L')">
+          <i class="bi bi-arrow-left-circle-fill"></i><span>Esquerdo</span>
+        </div>
+        <div class="side-btn" id="side-R" onclick="selectSide('R')">
+          <i class="bi bi-arrow-right-circle-fill"></i><span>Direito</span>
+        </div>
+      </div>
+      <div class="big-timer" id="feed-timer">00:00</div>
+      <div class="timer-status">
+        <div class="dot" id="feed-dot"></div>
+        <span id="feed-status">Aguardando</span>
+      </div>
+      <button class="btn-main btn-feed" id="feed-btn" onclick="toggleFeed()">
+        <i class="bi bi-play-circle-fill"></i> Iniciar mamada
+      </button>
+    </div>
+    <div class="metrics" style="grid-template-columns: 1fr;">
+      <div class="metric"><div class="metric-lbl">Mamadas hoje</div><div class="metric-val" id="feed-count">0</div></div>
+    </div>
+    <div class="card" id="feed-history-card" style="display:none">
+      <div class="section-lbl">Hoje</div>
+      <div id="feed-history"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-diaper">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-icon" style="background:var(--diaper-bg)">👶</div>
+        <div><div class="card-title">Registrar troca</div><div class="card-sub">Selecione o tipo de fralda</div></div>
+      </div>
+      <div class="section-lbl" style="margin-bottom:8px">Tipo</div>
+      <div class="diaper-btns">
+        <div class="diaper-btn sel-wet" id="dtype-wet" onclick="selectDiaper('wet')">
+          <span class="d-emoji">💧</span><span class="d-label">Xixi</span>
+        </div>
+        <div class="diaper-btn" id="dtype-dirty" onclick="selectDiaper('dirty')">
+          <span class="d-emoji">💩</span><span class="d-label">Cocô</span>
+        </div>
+        <div class="diaper-btn" id="dtype-mixed" onclick="selectDiaper('mixed')">
+          <span class="d-emoji">🔄</span><span class="d-label">Misto</span>
+        </div>
+      </div>
+      <button class="btn-main btn-diaper" onclick="logDiaper()">
+        <i class="bi bi-check-circle-fill"></i> Confirmar troca
+      </button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Trocas hoje</div><div class="metric-val" id="diaper-count">0</div></div>
+      <div class="metric"><div class="metric-lbl">Última troca</div><div class="metric-val" id="diaper-last">—</div></div>
+    </div>
+    <div class="card" id="diaper-history-card" style="display:none">
+      <div class="section-lbl">Hoje</div>
+      <div id="diaper-history"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-log">
+    <div class="sum-grid">
+      <div class="sum-card"><span class="sum-icon">🌙</span><div class="sum-val" id="sum-sleep">0</div><div class="sum-lbl">Sonos</div></div>
+      <div class="sum-card"><span class="sum-icon">🤱</span><div class="sum-val" id="sum-feed">0</div><div class="sum-lbl">Mamadas</div></div>
+      <div class="sum-card"><span class="sum-icon">👶</span><div class="sum-val" id="sum-diaper">0</div><div class="sum-lbl">Fraldas</div></div>
+    </div>
+    <div class="card">
+      <div class="section-lbl">Linha do tempo (Hoje)</div>
+      <div id="log-list"></div>
+      <button class="btn-danger" id="clear-btn" onclick="clearAllData()" style="display:none">
+        <i class="bi bi-trash3-fill"></i> Limpar dados locais
+      </button>
+    </div>
+    <div style="text-align:center; padding:10px 0 20px;">
+      <button onclick="changeUser()" style="background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; text-decoration:underline;">
+        Alterar perfil (<span id="user-name-label"></span>)
+      </button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-dash">
+    <div class="dash-period-selector">
+      <div class="dash-period-btn active" id="dp-0" onclick="changeDashPeriod(0)">Hoje</div>
+      <div class="dash-period-btn" id="dp-7" onclick="changeDashPeriod(7)">7D</div>
+      <div class="dash-period-btn" id="dp-15" onclick="changeDashPeriod(15)">15D</div>
+      <div class="dash-period-btn" id="dp-30" onclick="changeDashPeriod(30)">30D</div>
+    </div>
+
+    <div class="dash-metric-card" style="border-left: 5px solid var(--sleep-c)">
+      <div class="dash-metric-title">Tempo total de Sono</div>
+      <div class="dash-metric-value" id="dash-sleep-total">0h 0m</div>
+    </div>
+
+    <div class="dash-metric-card" style="border-left: 5px solid var(--awake-c)">
+      <div class="dash-metric-title">Tempo Total Acordada</div>
+      <div class="dash-metric-value" id="dash-awake-total">0h 0m</div>
+    </div>
+
+    <div class="dash-metric-card" style="border-left: 5px solid var(--feed-c)">
+      <div class="dash-metric-title">Total de Mamadas</div>
+      <div class="dash-metric-value" id="dash-feed-total">0</div>
+      
+      <div class="dash-progress-container">
+        <div class="dash-progress-label">
+          <span>Esquerdo (<span id="dash-feed-l-cnt">0</span>)</span>
+          <span id="dash-feed-l-pct">0%</span>
+        </div>
+        <div class="dash-progress-bar-bg">
+          <div class="dash-progress-bar-fill" id="dash-feed-bar-l" style="background: var(--feed-c); width: 0%"></div>
+          <div class="dash-progress-bar-fill" id="dash-feed-bar-r" style="background: #085041; width: 0%"></div>
+        </div>
+        <div class="dash-progress-label" style="margin-top: 4px;">
+          <span>Direito (<span id="dash-feed-r-cnt">0</span>)</span>
+          <span id="dash-feed-r-pct">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-tab="sleep" onclick="switchTab('sleep')"><i class="bi bi-moon-stars-fill ti"></i>Sono</button>
+  <button class="tab-btn" data-tab="feed" onclick="switchTab('feed')"><i class="bi bi-heart-fill ti"></i>Mamada</button>
+  <button class="tab-btn" data-tab="diaper" onclick="switchTab('diaper')"><i class="bi bi-info-circle-fill ti"></i>Fralda</button>
+  <button class="tab-btn" data-tab="log" onclick="switchTab('log')"><i class="bi bi-journal-text ti"></i>Diário</button>
+  <button class="tab-btn" data-tab="dash" onclick="switchTab('dash')"><i class="bi bi-bar-chart-line-fill ti"></i>Dash</button>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, push, onValue, set, get, remove, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDileBsyZ-ZCEdNjWuc7GHBYrHc9a2ZwNA",
+  authDomain: "eliz-diario.firebaseapp.com",
+  databaseURL: "https://eliz-diario-default-rtdb.firebaseio.com",
+  projectId: "eliz-diario",
+  storageBucket: "eliz-diario.firebasestorage.app",
+  messagingSenderId: "24589432745",
+  appId: "1:24589432745:web:e84cca6edc11ae45d4b6b8"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+const FAMILY_CODE = 'eliz-familia-2026';
+const BIRTH = new Date('2026-05-09T00:00:00');
+
+// ── Helpers para fuso horário de Fortaleza/Ceará ───────────────────────────────────
+function getFortalezaDate() {
+  const text = new Date().toLocaleString("en-US", { timeZone: "America/Fortaleza" });
+  return new Date(text);
+}
+
+function isTodayFortaleza(ts) {
+  const itemDate = new Date(ts).toLocaleString("en-US", { timeZone: "America/Fortaleza" });
+  const d1 = new Date(itemDate);
+  const d2 = getFortalezaDate();
+  return d1.toDateString() === d2.toDateString();
+}
+
+function getDeviceId() {
+  let id = localStorage.getItem('eliz_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('eliz_device_id', id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+
+let userName = localStorage.getItem('eliz_user') || '';
+let events = [];
+let sleepStart = null, sleepTick = null, isSleeping = false;
+let feedStart = null, feedTick = null, isFeeding = false;
+let feedSide = 'L', diaperType = 'wet';
+let dbRef, sessionsRef;
+let heartbeatInterval = null;
+let awakeStart = null;
+let awakeTick = null;
+let currentDashPeriod = 0;
+
+const HEARTBEAT_MS = 10000;
+const SESSION_TIMEOUT_MS = 25000;
+
+const sessionRef = user => ref(db, 'families/' + FAMILY_CODE + '/sessions/' + (user === 'Mamãe' ? 'mae' : 'pai'));
+
+function syncStatus(type, text) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-status');
+  dot.className = 'sync-dot ' + type;
+  txt.textContent = text;
+}
+
+function getAgeDays() {
+  return Math.floor((Date.now() - BIRTH.getTime()) / 86400000);
+}
+
+function updateAgeBadge() {
+  const d = getAgeDays();
+  document.getElementById('age-badge').textContent = d === 0 ? 'Recém-nascida 🌸' : d === 1 ? '1 dia' : d + ' dias';
+}
+
+const fmtTime = ts => {
+  return new Date(ts).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', timeZone: 'America/Fortaleza'});
+};
+
+const fmtDur = ms => {
+  const m = Math.floor(ms/60000), h = Math.floor(m/60), mm = m%60;
+  return h > 0 ? `${h}h ${mm}m` : `${mm}m`;
+};
+
+const fmtTimer = (ms, showSec=false) => {
+  const s = Math.floor(ms/1000), m = Math.floor(s/60), h = Math.floor(m/60);
+  const ss = String(s%60).padStart(2,'0'), mm = String(m%60).padStart(2,'0'), hh = String(h).padStart(2,'0');
+  return showSec ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+};
+
+async function checkAndClaimSession(user) {
+  const sRef = sessionRef(user);
+  const snap = await get(sRef);
+  if (snap.exists()) {
+    const s = snap.val();
+    if (s.deviceId !== DEVICE_ID && (Date.now() - s.ts < SESSION_TIMEOUT_MS)) {
+      return false;
+    }
+  }
+  await set(sRef, { deviceId: DEVICE_ID, ts: Date.now(), user });
+  return true;
+}
+
+function startHeartbeat(user) {
+  clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(() => {
+    set(sessionRef(user), { deviceId: DEVICE_ID, ts: Date.now(), user }).catch(() => {});
+  }, HEARTBEAT_MS);
+}
+
+function releaseSession(user) {
+  clearInterval(heartbeatInterval);
+  get(sessionRef(user)).then(snap => {
+    if (snap.exists() && snap.val().deviceId === DEVICE_ID) {
+      remove(sessionRef(user)).catch(() => {});
+    }
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  if (userName) releaseSession(userName);
+});
+
+async function chooseName(name) {
+  document.getElementById('btn-mae').disabled = true;
+  document.getElementById('btn-pai').disabled = true;
+  document.getElementById('setup-loading').style.display = 'block';
+  const ok = await checkAndClaimSession(name);
+  if (!ok) {
+    document.getElementById('btn-mae').disabled = false;
+    document.getElementById('btn-pai').disabled = false;
+    document.getElementById('setup-loading').style.display = 'none';
+    document.getElementById('blocked-user-name').textContent = name;
+    document.getElementById('blocked-screen').style.display = 'flex';
+    document.getElementById('setup-screen').style.display = 'none';
+    return;
+  }
+  localStorage.setItem('eliz_user', name);
+  userName = name;
+  startHeartbeat(name);
+  startApp();
+}
+window.chooseName = chooseName;
+
+function changeUser() {
+  if (userName) releaseSession(userName);
+  localStorage.removeItem('eliz_user');
+  location.reload();
+}
+window.changeUser = changeUser;
+
+window.retryLogin = function() {
+  document.getElementById('blocked-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+};
+
+window.forceLogin = async function() {
+  const name = document.getElementById('blocked-user-name').textContent;
+  await set(sessionRef(name), { deviceId: DEVICE_ID, ts: Date.now(), user: name });
+  localStorage.setItem('eliz_user', name);
+  userName = name;
+  startHeartbeat(name);
+  document.getElementById('blocked-screen').style.display = 'none';
+  startApp();
+};
+
+// ── Eventos Firebase ─────────────────────────────────────────────────────────
+function saveEvent(evt) {
+  evt.user = userName;
+  push(dbRef, evt).catch(() => syncStatus('err', 'Erro ao salvar'));
+}
+
+function listenEvents() {
+  syncStatus('loading', 'Sincronizando…');
+  const q = query(dbRef, orderByChild('ts'), limitToLast(200));
+  onValue(q, snap => {
+    events = [];
+    snap.forEach(child => {
+      events.push({ _key: child.key, ...child.val() });
+    });
+    events.sort((a,b) => b.ts - a.ts);
+    syncStatus('ok', 'Atualizado agora');
+    
+    updateSleepUI();
+    updateFeedUI();
+    updateDiaperUI();
+    renderLog();
+    updateDashboards();
+  }, err => {
+    syncStatus('err', 'Sem conexão');
+  });
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  
+  const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  if(activeBtn) activeBtn.classList.add('active');
+  
+  const activePanel = document.getElementById(`panel-${tab}`);
+  if(activePanel) activePanel.classList.add('active');
+}
+window.switchTab = switchTab;
+
+function startAwakeTimer(baseTs) {
+  awakeStart = baseTs;
+  localStorage.setItem('eliz_awake_start', baseTs);
+  updateAwakeInline();
+  clearInterval(awakeTick);
+  awakeTick = setInterval(updateAwakeInline, 60000);
+}
+
+function stopAwakeTimer() {
+  clearInterval(awakeTick);
+  const dur = Date.now() - awakeStart;
+  awakeStart = null;
+  localStorage.removeItem('eliz_awake_start');
+  document.getElementById('awake-inline-box').style.display = 'none';
+  return dur;
+}
+
+function updateAwakeInline() {
+  if (!awakeStart) return;
+  document.getElementById('awake-inline-box').style.display = 'block';
+  document.getElementById('awake-inline-timer').textContent = fmtTimer(Date.now() - awakeStart, false);
+}
+
+// ── Sono ──────────────────────────────────────────────────────────────────────
+function toggleSleep() {
+  if (!isSleeping) {
+    const awakeEnd = Date.now();
+    let awakeDur = null;
+    if (awakeStart) {
+      awakeDur = stopAwakeTimer();
+      saveEvent({ type: 'awake', ts: awakeStart, end: awakeEnd, dur: awakeDur });
+    }
+    isSleeping = true;
+    sleepStart = awakeEnd;
+    document.getElementById('sleep-btn').innerHTML = '<i class="bi bi-stop-circle-fill"></i> Acordou!';
+    document.getElementById('sleep-btn').className = 'btn-main btn-sleep-stop';
+    document.getElementById('sleep-dot').className = 'dot on';
+    document.getElementById('sleep-status').textContent = 'Eliz dormindo…';
+    document.getElementById('sleep-cancel').style.display = 'flex';
+    sleepTick = setInterval(() => {
+      document.getElementById('sleep-timer').textContent = fmtTimer(Date.now()-sleepStart, true);
+    }, 1000);
+  } else {
+    const sleepEnd = Date.now();
+    const dur = sleepEnd - sleepStart;
+    saveEvent({ type:'sleep', ts:sleepStart, end:sleepEnd, dur });
+    endSleep();
+    updateSleepUI();
+    startAwakeTimer(sleepEnd);
+    document.getElementById('sleep-dot').className = 'dot awake';
+    document.getElementById('sleep-status').textContent = 'Eliz acordada';
+  }
+}
+window.toggleSleep = toggleSleep;
+
+function endSleep() {
+  isSleeping = false;
+  clearInterval(sleepTick);
+  document.getElementById('sleep-timer').textContent = '00:00:00';
+  document.getElementById('sleep-btn').innerHTML = '<i class="bi bi-play-circle-fill"></i> Iniciar sono';
+  document.getElementById('sleep-btn').className = 'btn-main btn-sleep';
+  document.getElementById('sleep-dot').className = 'dot';
+  document.getElementById('sleep-cancel').style.display = 'none';
+}
+
+function cancelSleep() {
+  if (!isSleeping) return;
+  if (confirm('Cancelar o sono atual? Nenhum registro será salvo.')) {
+    endSleep();
+    document.getElementById('sleep-status').textContent = 'Eliz acordada';
+    if (awakeStart) {
+      updateAwakeInline();
+      document.getElementById('sleep-dot').className = 'dot awake';
+    }
+  }
+}
+window.cancelSleep = cancelSleep;
+
+function updateSleepUI() {
+  const today = events.filter(e => e.type==='sleep' && isTodayFortaleza(e.ts));
+  const totalMs = today.reduce((a,e) => a + (e.dur||0), 0);
+  document.getElementById('sleep-today').textContent = fmtDur(totalMs);
+  
+  const last = events.find(e => e.type==='sleep');
+  document.getElementById('sleep-last').textContent = last ? fmtTime(last.end) : '—';
+  
+  const sc = document.getElementById('sleep-history-card');
+  const sh = document.getElementById('sleep-history');
+  if(!today.length) { sc.style.display = 'none'; return; }
+  sc.style.display = 'block';
+  sh.innerHTML = today.slice(0,5).map(e => `
+    <div class="history-row">
+      <div class="h-icon" style="background:var(--sleep-bg)">🌙</div>
+      <div class="h-desc">Dormiu ${fmtDur(e.dur||0)} ${userBadge(e.user)}</div>
+      <div class="h-time">${fmtTime(e.ts)} às ${fmtTime(e.end)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Mamada ────────────────────────────────────────────────────────────────────
+function selectSide(s) {
+  if (isFeeding) return; 
+  feedSide = s;
+  document.getElementById('side-L').className = 'side-btn' + (s==='L' ? ' sel-l' : '');
+  document.getElementById('side-R').className = 'side-btn' + (s==='R' ? ' sel-r' : '');
+}
+window.selectSide = selectSide;
+
+function toggleFeed() {
+  if (!isFeeding) {
+    isFeeding = true;
+    feedStart = Date.now();
+    document.getElementById('feed-btn').innerHTML = '<i class="bi bi-stop-circle-fill"></i> Parar mamada';
+    document.getElementById('feed-btn').className = 'btn-main btn-feed-stop';
+    document.getElementById('feed-dot').classList.add('on');
+    document.getElementById('feed-status').textContent = 'Amamentando ('+(feedSide==='L'?'Esq.':'Dir.')+')';
+    
+    document.getElementById('side-L').classList.add('disabled');
+    document.getElementById('side-R').classList.add('disabled');
+    
+    feedTick = setInterval(() => {
+      document.getElementById('feed-timer').textContent = fmtTimer(Date.now()-feedStart, false);
+    }, 1000);
+  } else {
+    if (!feedStart) {
+      alert('Nenhuma mamada iniciada neste aparelho.');
+      return;
+    }
+    const dur = Date.now() - feedStart;
+    saveEvent({type:'feed', ts:feedStart, end:Date.now(), dur, side:feedSide});
+    
+    document.getElementById('side-L').classList.remove('disabled');
+    document.getElementById('side-R').classList.remove('disabled');
+    
+    const nextSide = feedSide === 'L' ? 'R' : 'L';
+    endFeed();
+    selectSide(nextSide);
+    updateFeedUI();
+  }
+}
+window.toggleFeed = toggleFeed;
+
+function endFeed() {
+  isFeeding = false;
+  feedStart = null;
+  clearInterval(feedTick);
+  document.getElementById('feed-timer').textContent = '00:00';
+  document.getElementById('feed-btn').innerHTML = '<i class="bi bi-play-circle-fill"></i> Iniciar mamada';
+  document.getElementById('feed-btn').className = 'btn-main btn-feed';
+  document.getElementById('feed-dot').classList.remove('on');
+  document.getElementById('feed-status').textContent = 'Aguardando';
+}
+
+function updateFeedUI() {
+  const today = events.filter(e => e.type==='feed' && isTodayFortaleza(e.ts));
+  document.getElementById('feed-count').textContent = today.length;
+  
+  const hc = document.getElementById('feed-history-card');
+  const hl = document.getElementById('feed-history');
+  if(!today.length) { hc.style.display = 'none'; return; }
+  hc.style.display = 'block';
+  hl.innerHTML = today.slice(0,5).map(e => `
+    <div class="history-row">
+      <div class="h-icon" style="background:var(--feed-bg)">🤱</div>
+      <div class="h-desc">Mamou no <span class="badge ${e.side==='L'?'badge-l':'badge-r'}">${e.side==='L'?'Esq.':'Dir.'}</span> (${fmtTimer(e.dur||0)}) ${userBadge(e.user)}</div>
+      <div class="h-time">${fmtTime(e.ts)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Fralda ────────────────────────────────────────────────────────────────────
+function selectDiaper(t) {
+  diaperType = t;
+  document.getElementById('dtype-wet').className = 'diaper-btn' + (t==='wet' ? ' sel-wet' : '');
+  document.getElementById('dtype-dirty').className = 'diaper-btn' + (t==='dirty' ? ' sel-dirty' : '');
+  document.getElementById('dtype-mixed').className = 'diaper-btn' + (t==='mixed' ? ' sel-mixed' : '');
+}
+window.selectDiaper = selectDiaper;
+
+function logDiaper() {
+  saveEvent({type:'diaper', ts:Date.now(), dtype:diaperType});
+  updateDiaperUI();
+}
+window.logDiaper = logDiaper;
+
+function updateDiaperUI() {
+  const today = events.filter(e => e.type==='diaper' && isTodayFortaleza(e.ts));
+  document.getElementById('diaper-count').textContent = today.length;
+  
+  const last = events.find(e => e.type==='diaper');
+  document.getElementById('diaper-last').textContent = last ? fmtTime(last.ts) : '—';
+  
+  const hc = document.getElementById('diaper-history-card');
+  const hl = document.getElementById('diaper-history');
+  if(!today.length) { hc.style.display = 'none'; return; }
+  hc.style.display = 'block';
+  const labels = {wet:'💧 Xixi', dirty:'💩 Cocô', mixed:'🔄 Misto'};
+  const bc = {wet:'badge-wet', dirty:'badge-dirty', mixed:'badge-mixed'};
+  hl.innerHTML = today.slice(0,5).map(e => `
+    <div class="history-row">
+      <div class="h-icon" style="background:var(--diaper-bg)">👶</div>
+      <div class="h-desc">Troca <span class="badge ${bc[e.dtype]}">${labels[e.dtype]}</span> ${userBadge(e.user)}</div>
+      <div class="h-time">${fmtTime(e.ts)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Diário ────────────────────────────────────────────────────────────────────
+function userBadge(u) {
+  return `<span class="badge ${u==='Mamãe'?'badge-mae':'badge-pai'}">${u||'—'}</span>`;
+}
+
+function renderLog() {
+  const today = events.filter(e => isTodayFortaleza(e.ts));
+  document.getElementById('sum-sleep').textContent = today.filter(e=>e.type==='sleep').length;
+  document.getElementById('sum-feed').textContent = today.filter(e=>e.type==='feed').length;
+  document.getElementById('sum-diaper').textContent = today.filter(e=>e.type==='diaper').length;
+  
+  const list = document.getElementById('log-list');
+  document.getElementById('clear-btn').style.display = events.length ? 'flex' : 'none';
+  
+  if (!today.length) {
+    list.innerHTML = '<div class="empty"><span class="empty-icon">🌙</span>Nenhum registro ainda</div>';
+    return;
+  }
+  
+  const labels = {wet:'Xixi 💧', dirty:'Cocô 💩', mixed:'Misto 🔄'};
+  const bc = {wet:'badge-wet', dirty:'badge-dirty', mixed:'badge-mixed'};
+  
+  list.innerHTML = today.map(e => {
+    if (e.type === 'sleep') {
+      return `
+        <div class="history-row">
+          <div class="h-icon" style="background:var(--sleep-bg)">🌙</div>
+          <div class="h-desc">Dormiu <span class="badge badge-sleep">${fmtDur(e.dur||0)}</span> ${userBadge(e.user)}</div>
+          <div class="h-time">${fmtTime(e.ts)} - ${fmtTime(e.end)}</div>
+        </div>
+      `;
+    }
+    if (e.type === 'awake') {
+      return `
+        <div class="history-row" style="padding-left:14px; opacity:0.85;">
+          <div class="h-icon" style="background:var(--awake-bg); width:28px; height:28px; font-size:12px;">☀️</div>
+          <div class="h-desc">Ficou acordada <span class="badge badge-awake">${fmtDur(e.dur||0)}</span></div>
+          <div class="h-time">${fmtTime(e.ts)}</div>
+        </div>
+      `;
+    }
+    if (e.type === 'feed') {
+      return `
+        <div class="history-row">
+          <div class="h-icon" style="background:var(--feed-bg)">🤱</div>
+          <div class="h-desc">Mamou: Seio <span class="badge ${e.side==='L'?'badge-l':'badge-r'}">${e.side==='L'?'Esquerdo':'Direito'}</span> (${fmtTimer(e.dur||0)}) ${userBadge(e.user)}</div>
+          <div class="h-time">${fmtTime(e.ts)}</div>
+        </div>
+      `;
+    }
+    if (e.type === 'diaper') {
+      return `
+        <div class="history-row">
+          <div class="h-icon" style="background:var(--diaper-bg)">👶</div>
+          <div class="h-desc">Troca de fralda: <span class="badge ${bc[e.dtype]}">${labels[e.dtype]}</span> ${userBadge(e.user)}</div>
+          <div class="h-time">${fmtTime(e.ts)}</div>
+        </div>
+      `;
+    }
+    return '';
+  }).join('');
+}
+
+function clearAllData() {
+  if (confirm('Deseja mesmo limpar os logs armazenados no banco de dados para esta família?')) {
+    set(dbRef, null).then(() => {
+      events = [];
+      location.reload();
+    });
+  }
+}
+window.clearAllData = clearAllData;
+
+// ── Dashboards por Período ──────────────────────────────────────────────────────────
+function changeDashPeriod(days) {
+  currentDashPeriod = days;
+  document.querySelectorAll('.dash-period-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`dp-${days}`).classList.add('active');
+  updateDashboards();
+}
+window.changeDashPeriod = changeDashPeriod;
+
+function updateDashboards() {
+  const referenceDate = getFortalezaDate();
+  let filtered = events;
+  
+  if (currentDashPeriod === 0) {
+    filtered = events.filter(e => isTodayFortaleza(e.ts));
+  } else {
+    const limitMs = referenceDate.getTime() - (currentDashPeriod * 24 * 60 * 60 * 1000);
+    filtered = events.filter(e => e.ts >= limitMs);
+  }
+  
+  const sleepTotalMs = filtered.filter(e => e.type === 'sleep').reduce((a,e) => a + (e.dur||0), 0);
+  const awakeTotalMs = filtered.filter(e => e.type === 'awake').reduce((a,e) => a + (e.dur||0), 0);
+  
+  document.getElementById('dash-sleep-total').textContent = fmtDur(sleepTotalMs);
+  document.getElementById('dash-awake-total').textContent = fmtDur(awakeTotalMs);
+  
+  const feeds = filtered.filter(e => e.type === 'feed');
+  const totalFeeds = feeds.length;
+  document.getElementById('dash-feed-total').textContent = totalFeeds;
+  
+  const leftCnt = feeds.filter(e => e.side === 'L').length;
+  const rightCnt = feeds.filter(e => e.side === 'R').length;
+  
+  const leftPct = totalFeeds > 0 ? Math.round((leftCnt / totalFeeds) * 100) : 0;
+  const rightPct = totalFeeds > 0 ? Math.round((rightCnt / totalFeeds) * 100) : 0;
+  
+  document.getElementById('dash-feed-l-cnt').textContent = leftCnt;
+  document.getElementById('dash-feed-l-pct').textContent = leftPct + '%';
+  document.getElementById('dash-feed-bar-l').style.width = leftPct + '%';
+  
+  document.getElementById('dash-feed-r-cnt').textContent = rightCnt;
+  document.getElementById('dash-feed-r-pct').textContent = rightPct + '%';
+  document.getElementById('dash-feed-bar-r').style.width = rightPct + '%';
+}
+
+// ── Inicialização ─────────────────────────────────────────────────────────────
+async function boot() {
+  if (!userName) {
+    document.getElementById('setup-screen').style.display = 'flex';
+    return;
+  }
+  const ok = await checkAndClaimSession(userName);
+  if (!ok) {
+    document.getElementById('blocked-user-name').textContent = userName;
+    document.getElementById('blocked-screen').style.display = 'flex';
+    return;
+  }
+  startHeartbeat(userName);
+  startApp();
+}
+
+function startApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('blocked-screen').style.display = 'none';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'flex';
+
+  dbRef = ref(db, 'families/' + FAMILY_CODE + '/events');
+
+  document.getElementById('header-date').textContent = getFortalezaDate().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('user-name-label').textContent = userName;
+
+  updateAgeBadge();
+  setInterval(updateAgeBadge, 60000);
+
+  const localAwake = localStorage.getItem('eliz_awake_start');
+  if (localAwake) {
+    startAwakeTimer(parseInt(localAwake, 10));
+  }
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !window.navigator.standalone && !localStorage.getItem('banner_dismissed')) {
+    document.getElementById('install-banner').style.display = 'flex';
+  }
+
+  listenEvents();
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+window.dismissBanner = function() {
+  localStorage.setItem('banner_dismissed', '1');
+  document.getElementById('install-banner').style.display = 'none';
+};
+
+boot();
+</script>
+</body>
+</html>
